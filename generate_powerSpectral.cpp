@@ -36,12 +36,12 @@ int main(void)
         if (i == 1) //Skipping the repeated initial value
             continue;
         in[i - 1][0] = p; //Assign the REAL part of input
-        in[i - 1][1] = 0; //Assign the IMAGINARY part og input
+        in[i - 1][1] = 0; //Assign the IMAGINARY part of input
     }
 
     string outputFile = "dft"; //declare the output file
     ofstream dft;
-    dft.open("dft"); //open the file to print the output into
+    dft.open(outputFile); //open the file to print the output into
 
     //Forward Fourier transform, save the result in 'out'
     cout << "Calculating the forward fourier transform." << endl;
@@ -67,8 +67,8 @@ int main(void)
         //Calculate the power spectral density which is the squared modulus of the 'out[i]'
         double a = out[i][0];
         double b = out[i][1];
-        double c = (a*a + b*b); //Modulus
-        double psd = c*c; //Power Spectral density
+        double c = (a * a + b * b); //Modulus
+        double psd = c * c;         //Power Spectral density
         dft << i << " " << in[i][0] << " " << out[i][0] << " " << out[i][1] << " " << psd << endl;
     }
 
