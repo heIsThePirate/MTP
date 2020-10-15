@@ -1,33 +1,44 @@
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
 #include <omp.h>
+
 #include "timeStamp.h"
+
 using namespace std;
+
+#define endl '\n'
+#define sqr(x) ((x) * (x))
+#define numOfIter 5000
+#define numOfVar 50000
 
 int main()
 {
-    double *b, *x, *xnew;
-    double d, r, t;
-    int i, iter, numOfIter, numOfVar;
-
-    numOfIter = 5000;
-    numOfVar = 50000;
+    double *x, *xNew, *b;
+    double d, r, t, wtime;
+    int i, iter;
+    fstream outputFile;
+    string outputFilename = "jacobi.txt";
 
     b = new double[numOfVar];
     x = new double[numOfVar];
-    xnew = new double[numOfVar];
+    xNew = new double[numOfVar];
 
     timestamp();
-    cout << "\n";
-    cout << "JACOBI_OPENMP:\n";
-    cout << "  C/OpenMP version\n";
-    cout << "  Jacobi iteration to solve A*x=b.\n";
-    cout << "\n";
-    cout << "  Number of variables  N = " << numOfVar << "\n";
-    cout << "  Number of iterations M = " << numOfIter << "\n";
+    cout << endl;
 
-    cout << "\n";
-    cout << "  IT     l2(dX)    l2(resid)\n";
-    cout << "\n";
+    cout << "Using OpenMP to run Jacobi iteration for getting the solution of the equation A*x=b" << endl;
+    cout << "Number of variables, N = " << numOfVar << endl;
+    cout << "Number of iterations, M = " << numOfIter << endl;
+
+    outputFile.open(outputFilename.c_str(), ios::out);
+    if (!outputFile)
+    {
+        cout << "Error in opening the output file!" << endl;
+        return -1;
+    }
+
+    outputFile << "i               x" << endl;
+
+    wtime = omp_get_wtime();
 
 #pragma omp parallel private(i)
     {
@@ -43,7 +54,7 @@ int main()
             x[i] = 0.0;
     }
 
-    // Do the iteration
+    // Doing the iteration
     for (iter = 0; iter < numOfIter; iter++)
     {
 #pragma omp parallel private(i, t)
@@ -51,25 +62,25 @@ int main()
 #pragma omp for
             for (i = 0; i < numOfVar; i++)
             {
-                xnew[i] = b[i];
+                xNew[i] = b[i];
                 if (i > 0)
-                    xnew[i] = xnew[i] + x[i - 1];
+                    xNew[i] = xNew[i] + x[i - 1];
                 if (i < numOfVar - 1)
-                    xnew[i] = xnew[i] + x[i + 1];
+                    xNew[i] = xNew[i] + x[i + 1];
 
-                xnew[i] = xnew[i] / 2.0;
+                xNew[i] = xNew[i] / 2.0;
             }
 
             d = 0.0;
 #pragma omp for reduction(+ \
                           : d)
             for (i = 0; i < numOfVar; i++)
-                d = d + pow(x[i] - xnew[i], 2);
+                d = d + pow(x[i] - xNew[i], 2);
 
-// Update the solution
+// Updating the solution
 #pragma omp for
             for (i = 0; i < numOfVar; i++)
-                x[i] = xnew[i];
+                x[i] = xNew[i];
 
             r = 0.0;
 #pragma omp for reduction(+ \
@@ -82,43 +93,29 @@ int main()
                 if (i < numOfVar - 1)
                     t = t + x[i + 1];
 
-                r = r + t * t;
-            }
-
-#pragma omp master
-            {
-                if (iter < 10 || iter > numOfIter - 10)
-                    cout << "  " << setw(8) << iter
-                         << "  " << setw(14) << sqrt(d)
-                         << "  " << sqrt(r) << "\n";
-
-                if (iter == 9)
-                    cout << "  Omitting intermediate results.\n";
+                r = r + sqr(t);
             }
         }
     }
 
-    cout << "\n";
-    cout << "  Part of final solution estimate:\n";
-    cout << "\n";
-    for (i = 0; i < 10; i++)
-        cout << "  " << setw(8) << i
-             << "  " << setw(14) << x[i] << "\n";
-    cout << "...\n";
-
-    for (i = numOfVar - 11; i < numOfVar; i++)
-        cout << "  " << setw(8) << i
-             << "  " << setw(14) << x[i] << "\n";
+    for (i = 0; i < numOfVar; i++)
+        outputFile << setw(1) << i << setw(16) << x[i] << endl;
 
     delete[] b;
     delete[] x;
-    delete[] xnew;
+    delete[] xNew;
 
-    cout << "\n";
-    cout << "JACOBI_OPENMP:\n";
-    cout << "  Normal end of execution.\n";
-    cout << "\n";
+    cout << endl;
+    wtime = omp_get_wtime() - wtime;
+
+    cout << "Time elapsed: " << wtime << endl;
+
+    cout << endl;
     timestamp();
 
     return 0;
 }
+
+#undef sqr
+#undef numOfIter
+#undef numOfVar

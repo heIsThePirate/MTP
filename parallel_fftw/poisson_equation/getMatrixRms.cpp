@@ -1,4 +1,6 @@
-#include<cmath>
+#include <cmath>
+#include "getMatrixRMS.h"
+
 using namespace std;
 
 double getMatrixRms(int Nx, int Ny, double** mat)
