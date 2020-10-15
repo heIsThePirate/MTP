@@ -64,18 +64,18 @@ int main()
             {
                 xNew[i] = b[i];
                 if (i > 0)
-                    xNew[i] = xNew[i] + x[i - 1];
+                    xNew[i] += x[i - 1];
                 if (i < numOfVar - 1)
-                    xNew[i] = xNew[i] + x[i + 1];
+                    xNew[i] += x[i + 1];
 
-                xNew[i] = xNew[i] / 2.0;
+                xNew[i] /= 2.0;
             }
 
             d = 0.0;
 #pragma omp for reduction(+ \
                           : d)
             for (i = 0; i < numOfVar; i++)
-                d = d + pow(x[i] - xNew[i], 2);
+                d += sqr(x[i] - xNew[i]);
 
 // Updating the solution
 #pragma omp for
@@ -89,11 +89,11 @@ int main()
             {
                 t = b[i] - 2.0 * x[i];
                 if (i > 0)
-                    t = t + x[i - 1];
+                    t += x[i - 1];
                 if (i < numOfVar - 1)
-                    t = t + x[i + 1];
+                    t += x[i + 1];
 
-                r = r + sqr(t);
+                r += sqr(t);
             }
         }
     }
